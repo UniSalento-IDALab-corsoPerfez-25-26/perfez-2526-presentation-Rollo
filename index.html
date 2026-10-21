@@ -20,7 +20,6 @@
             <a href="#overview">Panoramica</a>
             <a href="#architecture">Architettura</a>
             <a href="#implementation">Implementazione</a>
-            <a href="#results">Risultati</a>
             <a href="#repositories">Repository</a>
         </div>
     </nav>
@@ -51,23 +50,85 @@
             <h2>🏗️ Architettura del Sistema</h2>
             <img src="arch.png" alt="Architettura del Sistema" class="architecture-img">
 
+            <p class="architecture-intro">
+                Il sistema è strutturato secondo un'architettura pipeline end-to-end che copre l'intero
+                ciclo di vita del progetto, dalla preparazione dei dati fino al deployment su hardware
+                embedded. L'architettura garantisce un flusso di lavoro riproducibile dalla sperimentazione
+                alla produzione, con particolare attenzione all'efficienza computazionale per dispositivi
+                a risorse limitate.
+            </p>
+
             <div class="architecture-phases">
                 <div class="phase">
-                    <h3>1️⃣ Acquisizione e Pre-elaborazione</h3>
-                    <p>Dataset KFall con segnali IMU a 6 assi organizzati in finestre temporali
-                    scorrevoli (30-50 campioni a 100 Hz).</p>
+                    <h3>1️⃣ Acquisizione e Pre-elaborazione dei Dati</h3>
+                    <p>
+                        I dati provengono dal dataset pubblico <strong>KFall</strong>, che contiene registrazioni
+                        da sensori IMU (accelerometro e giroscopio a 3 assi) campionati a <strong>100 Hz</strong>.
+                        La fase di preprocessing include:
+                    </p>
+                    <ul>
+                        <li><strong>Split per soggetto</strong>: la suddivisione in train/validation/test avviene
+                        a livello di soggetto (non di singole registrazioni) per evitare data leakage e garantire
+                        la generalizzazione del modello a nuovi individui</li>
+                        <li><strong>Organizzazione in finestre temporali</strong>: i segnali continui vengono
+                        segmentati in finestre scorrevoli di dimensione configurabile (30, 40 o 50 campioni),
+                        permettendo al modello di analizzare pattern temporali brevi ma significativi</li>
+                        <li><strong>Normalizzazione</strong>: standardizzazione z-score calcolata sul solo training
+                        set e applicata a tutti i set per preservare la validità statistica</li>
+                        <li><strong>Gestione sbilanciamento</strong>: tecniche di stride differenziato e gestione
+                        finestre a cavallo per bilanciare la rappresentazione delle classi</li>
+                    </ul>
                 </div>
 
                 <div class="phase">
-                    <h3>2️⃣ Training e Selezione</h3>
-                    <p>Pipeline automatizzata di k-fold cross-validation (k=6) per identificare
-                    la configurazione ottimale. Modello CNN-GAP con Global Average Pooling.</p>
+                    <h3>2️⃣ Training e Selezione del Modello</h3>
+                    <p>
+                        La fase di training utilizza una <strong>pipeline automatizzata</strong> che esplora
+                        sistematicamente lo spazio degli iperparametri attraverso <strong>k-fold cross-validation
+                        (k=6)</strong> per soggetto. Il processo include:
+                    </p>
+                    <ul>
+                        <li><strong>Ricerca configurazioni</strong>: testing esaustivo di 108 configurazioni che
+                        combinano parametri di preprocessing (dimensione finestra, gestione finestre miste, stride
+                        negativi) e training (fattore riduzione learning rate)</li>
+                        <li><strong>Architettura CNN-GAP</strong>: il modello è una Convolutional Neural Network
+                        con Global Average Pooling che sostituisce le LSTM tradizionali, riducendo drasticamente
+                        il numero di parametri mantenendo la capacità di catturare dipendenze temporali.
+                        L'architettura comprende 3 blocchi convoluzionali con batch normalization e max pooling,
+                        seguiti da GAP, layer denso con dropout e output sigmoide</li>
+                        <li><strong>Loss function specializzata</strong>: Binary Focal Crossentropy con class
+                        weighting (alpha=0.75) per gestire lo sbilanciamento delle classi e focus sui campioni
+                        difficili (gamma=2.0)</li>
+                        <li><strong>Validazione robusta</strong>: metriche a livello di finestra (accuracy,
+                        precision, recall, PR-AUC) e a livello di evento (sensibilità, specificità, lead time)
+                        per valutare le prestazioni in scenari realistici</li>
+                        <li><strong>Selezione ottimale</strong>: identificazione della configurazione migliore
+                        basata su ranking multi-criterio che bilancia accuratezza e lead time</li>
+                    </ul>
                 </div>
 
                 <div class="phase">
                     <h3>3️⃣ Quantizzazione e Deployment</h3>
-                    <p>Post-training quantization int8 e deployment su ESP32 con TensorFlow
-                    Lite Micro per inferenza real-time.</p>
+                    <p>
+                        La fase finale prepara il modello per l'esecuzione su hardware embedded attraverso
+                        <strong>post-training quantization</strong>:
+                    </p>
+                    <ul>
+                        <li><strong>Quantizzazione int8</strong>: conversione del modello da float32 a int8
+                        utilizzando un representative dataset bilanciato estratto dal training set, riducendo
+                        la dimensione del modello di ~4x e accelerando l'inferenza</li>
+                        <li><strong>Ottimizzazione per ESP32</strong>: utilizzo di TensorFlow Lite Micro con
+                        operatori ottimizzati da esp-nn per sfruttare le caratteristiche hardware-specific
+                        del microcontrollore</li>
+                        <li><strong>Validazione post-quantizzazione</strong>: verifica che la perdita di
+                        accuratezza sia contenuta (<2%) attraverso confronto diretto con il modello Keras originale</li>
+                        <li><strong>Deployment firmware</strong>: integrazione del modello quantizzato in un
+                        firmware FreeRTOS multi-task che coordina acquisizione IMU (100 Hz), inferenza real-time
+                        con finestra scorrevole (stride 10) e attivazione airbag con latenza minima</li>
+                        <li><strong>Ottimizzazione risorse</strong>: gestione efficiente di memoria RAM (~36KB)
+                        e Flash (~400KB) attraverso tensor arena pre-allocata, buffer statici e comunicazione
+                        inter-task tramite code FreeRTOS dimensionate per garantire buffering durante l'inferenza</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -101,34 +162,20 @@
                     <ul>
                         <li>FreeRTOS multi-task</li>
                         <li>IMU ICM20948 via I2C</li>
-                        <li>Inferenza 80-150ms</li>
                         <li>Finestra scorrevole stride 10</li>
+                        <li>Attivazione airbag real-time</li>
                     </ul>
                 </div>
 
                 <div class="impl-card">
-                    <h3>⚡ Prestazioni</h3>
+                    <h3>⚡ Prestazioni ESP32-S3</h3>
                     <ul>
-                        <li>RAM: ~36KB / 520KB</li>
-                        <li>Flash: ~400KB / 4MB</li>
-                        <li>Latenza: <150ms</li>
+                        <li>RAM: ~36KB</li>
+                        <li>Flash: ~400KB</li>
+                        <li>Latenza inferenza: ~2ms</li>
                         <li>Frequenza predizioni: ~10Hz</li>
                     </ul>
                 </div>
-            </div>
-        </section>
-
-        <section id="results">
-            <h2>📈 Risultati</h2>
-            <div class="results-box">
-                <h3>Metriche Principali</h3>
-                <ul>
-                    <li><strong>Accuracy:</strong> [Inserisci valore] %</li>
-                    <li><strong>Precision:</strong> [Inserisci valore] %</li>
-                    <li><strong>Recall:</strong> [Inserisci valore] %</li>
-                    <li><strong>Lead Time medio:</strong> [Inserisci valore] ms</li>
-                </ul>
-                <p class="note">💡 La quantizzazione introduce una perdita di accuratezza tipicamente <2%</p>
             </div>
         </section>
 
@@ -174,7 +221,7 @@
     <footer>
         <div class="container">
             <p>© 2026 - Corso di Perfezionamento in Tecnologie Digitali per Ambienti e Sistemi Intelligenti</p>
-            <p>Sviluppato da [Tuo Nome]</p>
+            <p>Università del Salento</p>
         </div>
     </footer>
 </body>
