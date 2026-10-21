@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rilevazione Cadute Pre-Impact</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🛡️ Rilevazione delle Cadute Pre-Impact</h1>
+            <p class="subtitle">Sistema di Fall Detection basato su Deep Learning e ESP32</p>
+            <p class="course">Corso di Perfezionamento in Tecnologie Digitali per Ambienti e Sistemi Intelligenti</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="#overview">Panoramica</a>
+            <a href="#architecture">Architettura</a>
+            <a href="#implementation">Implementazione</a>
+            <a href="#results">Risultati</a>
+            <a href="#repositories">Repository</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="overview">
+            <h2>📖 Panoramica del Progetto</h2>
+            <p>
+                Questo progetto implementa un sistema completo di rilevazione delle cadute pre-impact
+                basato su deep learning, che integra:
+            </p>
+            <ul>
+                <li><strong>Training automatizzato</strong> con k-fold cross-validation</li>
+                <li><strong>Modello CNN-GAP</strong> ottimizzato per dispositivi embedded</li>
+                <li><strong>Quantizzazione int8</strong> per deployment efficiente</li>
+                <li><strong>Inferenza real-time</strong> su microcontrollore ESP32</li>
+            </ul>
+
+            <div class="highlight-box">
+                <h3>🎯 Obiettivo</h3>
+                <p>Rilevare cadute in fase pre-impact (prima dell'impatto al suolo) utilizzando
+                dati da IMU (accelerometro + giroscopio) per permettere l'attivazione tempestiva
+                di sistemi di protezione come airbag indossabili.</p>
+            </div>
+        </section>
+
+        <section id="architecture">
+            <h2>🏗️ Architettura del Sistema</h2>
+            <img src="images/arch.png" alt="Architettura del Sistema" class="architecture-img">
+
+            <div class="architecture-phases">
+                <div class="phase">
+                    <h3>1️⃣ Acquisizione e Pre-elaborazione</h3>
+                    <p>Dataset KFall con segnali IMU a 6 assi organizzati in finestre temporali
+                    scorrevoli (30-50 campioni a 100 Hz).</p>
+                </div>
+
+                <div class="phase">
+                    <h3>2️⃣ Training e Selezione</h3>
+                    <p>Pipeline automatizzata di k-fold cross-validation (k=6) per identificare
+                    la configurazione ottimale. Modello CNN-GAP con Global Average Pooling.</p>
+                </div>
+
+                <div class="phase">
+                    <h3>3️⃣ Quantizzazione e Deployment</h3>
+                    <p>Post-training quantization int8 e deployment su ESP32 con TensorFlow
+                    Lite Micro per inferenza real-time.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="implementation">
+            <h2>⚙️ Dettagli Implementativi</h2>
+
+            <div class="implementation-grid">
+                <div class="impl-card">
+                    <h3>🧠 Modello CNN-GAP</h3>
+                    <ul>
+                        <li>3 blocchi Conv1D con BatchNorm</li>
+                        <li>Global Average Pooling (no LSTM)</li>
+                        <li>Binary Focal Crossentropy</li>
+                        <li>~10-15KB quantizzato</li>
+                    </ul>
+                </div>
+
+                <div class="impl-card">
+                    <h3>📊 Dataset e Training</h3>
+                    <ul>
+                        <li>Dataset KFall (pubblico)</li>
+                        <li>Split per soggetto</li>
+                        <li>108 configurazioni testate</li>
+                        <li>Finestra ottimale: 40 campioni</li>
+                    </ul>
+                </div>
+
+                <div class="impl-card">
+                    <h3>🔧 Firmware ESP32</h3>
+                    <ul>
+                        <li>FreeRTOS multi-task</li>
+                        <li>IMU ICM20948 via I2C</li>
+                        <li>Inferenza 80-150ms</li>
+                        <li>Finestra scorrevole stride 10</li>
+                    </ul>
+                </div>
+
+                <div class="impl-card">
+                    <h3>⚡ Prestazioni</h3>
+                    <ul>
+                        <li>RAM: ~36KB / 520KB</li>
+                        <li>Flash: ~400KB / 4MB</li>
+                        <li>Latenza: <150ms</li>
+                        <li>Frequenza predizioni: ~10Hz</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="results">
+            <h2>📈 Risultati</h2>
+            <div class="results-box">
+                <h3>Metriche Principali</h3>
+                <ul>
+                    <li><strong>Accuracy:</strong> [Inserisci valore] %</li>
+                    <li><strong>Precision:</strong> [Inserisci valore] %</li>
+                    <li><strong>Recall:</strong> [Inserisci valore] %</li>
+                    <li><strong>Lead Time medio:</strong> [Inserisci valore] ms</li>
+                </ul>
+                <p class="note">💡 La quantizzazione introduce una perdita di accuratezza tipicamente <2%</p>
+            </div>
+        </section>
+
+        <section id="repositories">
+            <h2>💻 Repository del Progetto</h2>
+
+            <div class="repo-cards">
+                <div class="repo-card">
+                    <h3>🎓 Training e Quantizzazione</h3>
+                    <p>Pipeline completa di training con k-fold cross-validation, selezione
+                    configurazione ottimale e quantizzazione TFLite.</p>
+                    <a href="https://github.com/UniSalento-IDALab-corsoPerfez-25-26/perfez-2526-TrainModello-Rollo"
+                       class="btn" target="_blank">
+                        Vai alla Repository →
+                    </a>
+                </div>
+
+                <div class="repo-card">
+                    <h3>🔌 Firmware ESP32</h3>
+                    <p>Firmware per ESP32 con acquisizione IMU, inferenza TFLite Micro e
+                    sistema di attivazione airbag real-time.</p>
+                    <a href="https://github.com/UniSalento-IDALab-corsoPerfez-25-26/perfez-2526-ESP32-Rollo"
+                       class="btn" target="_blank">
+                        Vai alla Repository →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="references">
+            <h2>📚 Riferimenti</h2>
+            <ul class="references-list">
+                <li><a href="https://sites.google.com/view/kfalldataset" target="_blank">
+                    Dataset KFall</a></li>
+                <li><a href="https://docs.espressif.com/projects/esp-idf/" target="_blank">
+                    ESP-IDF Documentation</a></li>
+                <li><a href="https://www.tensorflow.org/lite/microcontrollers" target="_blank">
+                    TensorFlow Lite Micro</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 - Corso di Perfezionamento in Tecnologie Digitali per Ambienti e Sistemi Intelligenti</p>
+            <p>Sviluppato da [Tuo Nome]</p>
+        </div>
+    </footer>
+</body>
+</html>
