@@ -230,6 +230,10 @@ section strong {
 }
 
 /* Architecture */
+.architecture-figure {
+    margin: 24px 0 36px;
+}
+
 .architecture-img {
     display: block;
     width: 100%;
@@ -240,6 +244,19 @@ section strong {
     border-radius: 14px;
     box-shadow: 0 12px 35px rgba(27,55,79,.1);
     transition: box-shadow .25s ease, transform .25s ease;
+}
+
+.architecture-figure .architecture-img {
+    margin: 0 auto 12px;
+}
+
+.architecture-figure figcaption {
+    max-width: 940px;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: .95rem;
+    line-height: 1.6;
+    text-align: center;
 }
 
 .architecture-img:hover {
