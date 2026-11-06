@@ -49,7 +49,24 @@
         <section id="architecture">
             <h2>🏗️ Architettura del Sistema</h2>
 
-            <h3>Architettura generale del progetto</h3>
+            <h3>Architettura</h3>
+            <p class="architecture-intro">
+                Il progetto integra due sottosistemi complementari per supportare la salute e l'autonomia
+                della persona anziana. Il primo è dedicato alla protezione dalle cadute: un gilet con
+                airbag integra un'unità di misura inerziale (IMU) e un microcontrollore, che elabora
+                localmente i segnali tramite un modello di apprendimento automatico. Se riconosce una
+                caduta imminente prima dell'impatto, il sistema genera il trigger per attivare l'airbag.
+            </p>
+            <p class="architecture-intro">
+                Il secondo sottosistema monitora nel tempo indicatori associati alla sarcopenia, come peso
+                e massa muscolare, altezza, forza e caratteristiche del cammino, insieme alle risposte al
+                questionario SARC-F. L'utente, con il supporto del caregiver, inserisce o raccoglie le
+                misure tramite smartphone; i dati sono archiviati su server e database, quindi resi
+                consultabili attraverso una dashboard e utilizzati da un sistema RAG per produrre sintesi
+                informative. I due sottosistemi condividono l'utente, ma differiscono per modalità e
+                orizzonte temporale: protezione continua e automatica nel primo caso, raccolta periodica
+                e assistita nel secondo.
+            </p>
             <figure class="architecture-figure">
                 <img src="arch-generale.png"
                      alt="Architettura generale con il sottosistema per la protezione dalle cadute e quello per il monitoraggio della sarcopenia, con il coinvolgimento di paziente e caregiver"
@@ -59,15 +76,14 @@
                 </figcaption>
             </figure>
 
-            <h3>Pipeline di training e deployment</h3>
+            <h3>Pipeline</h3>
             <img src="arch.png" alt="Architettura del Sistema" class="architecture-img">
 
             <p class="architecture-intro">
-                Il sistema è strutturato secondo un'architettura pipeline end-to-end che copre l'intero
-                ciclo di vita del progetto, dalla preparazione dei dati fino al deployment su hardware
-                embedded. L'architettura garantisce un flusso di lavoro riproducibile dalla sperimentazione
-                alla produzione, con particolare attenzione all'efficienza computazionale per dispositivi
-                a risorse limitate.
+                La pipeline descrive il ciclo di vita del sistema di rilevazione delle cadute, dalla
+                preparazione dei dati al deployment su hardware embedded. Organizza un flusso di lavoro
+                riproducibile dalla sperimentazione alla produzione, con particolare attenzione
+                all'efficienza computazionale per dispositivi a risorse limitate.
             </p>
 
             <div class="architecture-phases">
